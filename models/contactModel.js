@@ -5,14 +5,21 @@ const contactSchema = mongoose.Schema(
     id: {
       type: Number,
       required: [true, 'Id required'],
+      unique: true,
     },
     name: {
       type: String,
       required: [true, 'Contact Name required'],
     },
-    phoneNumber: {
+    phoneNumber: [
+      {
+        type: String,
+        unique: true,
+        required: [true, 'Contact phone number required'],
+      },
+    ],
+    address: {
       type: String,
-      required: [true, 'Contact phone number required'],
     },
   },
   {
