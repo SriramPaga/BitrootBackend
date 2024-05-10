@@ -15,7 +15,7 @@ const multer = require('multer');
 // const upload = multer({ dest: 'uploads/' });
 const upload = require('./middleware/upload');
 app.use(express.urlencoded({ extended: false }));
-app.use('/uploads', express.static('uploads'));
+app.use('/tmp', express.static('tmp'));
 
 //CSV Writer
 const Json2csvParser = require('json2csv').Parser;
