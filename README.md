@@ -1,6 +1,6 @@
 Please use the below extension to the link for testing.
 
-/contact - to upload 
+/contact - to upload
 
 /contact/:id - to find specific entry
 
@@ -15,3 +15,5 @@ Please use the below extension to the link for testing.
 /contact/addphone/:id - add a phoneNumber
 
 /contact/deletephone/:id - remove a phoneNumber
+
+/contact/uploadAvatar/:id - to upload Avatar
