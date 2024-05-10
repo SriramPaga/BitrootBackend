@@ -4,10 +4,22 @@ const Contact = require('./models/contactModel');
 const app = express();
 var cors = require('cors');
 app.use(cors());
-const port = 5000;
+const port = 4000;
 const host = '0.0.0.0';
 var os = require('os');
 app.use(express.json());
+
+//Image Uplaod
+
+const multer = require('multer');
+// const upload = multer({ dest: 'uploads/' });
+const upload = require('./middleware/upload');
+app.use(express.urlencoded({ extended: false }));
+app.use('/uploads', express.static('uploads'));
+
+//CSV Writer
+const Json2csvParser = require('json2csv').Parser;
+const fs = require('fs');
 
 const mongoose = require('mongoose');
 
@@ -28,17 +40,48 @@ mongoose
   });
 
 //methods
+
+//file upload
+app.put(
+  '/contact/uploadAvatar/:id',
+  upload.single('avatar'),
+  async (req, res) => {
+    // console.log(req.file.path);
+    try {
+      const unique_id = await Contact.find({ id: { $eq: req.body.id } });
+      // console.log(unique_id[0]._id);
+      if (unique_id.length != 0) {
+        // return console.log(req.file.path.toString());
+        const contact = await Contact.findByIdAndUpdate(unique_id[0]._id, {
+          avatar: req.file.path,
+        });
+        return res.status(201).json(contact);
+      }
+      return res.status(400).json({ message: 'User with id already exists' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+);
+
 //Create a new contact
-app.post('/contact', async (req, res) => {
+app.post('/contact', upload.single('avatar'), async (req, res) => {
   try {
     console.log(req);
     const unique_flag = await Contact.find({
       phoneNumber: { $eq: req.body.phoneNumber },
     });
+    const unique_id = await Contact.find({
+      id: { $eq: req.body.id },
+    });
     console.log(unique_flag);
     if (unique_flag.length == 0) {
-      const contact = await Contact.create(req.body);
-      return res.status(201).json(contact);
+      if (unique_id.length == 0) {
+        req.body.avatar = req.file.path;
+        const contact = await Contact.create(req.body);
+        return res.status(201).json(contact);
+      }
+      return res.status(400).json({ message: 'User with id already exists' });
     }
     return res
       .status(400)
@@ -95,7 +138,7 @@ app.get('/contact/search/:searchvar', async (req, res) => {
       });
       res.status(200).json(contact);
     } else {
-      res.status(400).json({ message: "No match found" });
+      res.status(400).json({ message: 'No match found' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -201,7 +244,7 @@ app.put('/contact/addphone/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
+// to pull phoneNumber
 app.put('/contact/deletephone/:id', async (req, res) => {
   try {
     console.log(req);
@@ -230,6 +273,29 @@ app.put('/contact/deletephone/:id', async (req, res) => {
     return res
       .status(400)
       .json({ message: 'User with phoneNumber already exists' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+//To export data to CSV
+app.get('/contact/csvexport', async (req, res) => {
+  try {
+    const contacts = await Contact.find({}).toArray((err, data) => {
+      if (err) throw err;
+      console.log(data);
+      const json2csvParser = new Json2csvParser({ header: true });
+      const csvData = json2csvParser.parse(data);
+
+      fs.writeFile('bezkoder_mongodb_fs.csv', csvData, function (error) {
+        if (error) throw error;
+        console.log('Write to bezkoder_mongodb_fs.csv successfully!');
+      });
+
+      client.close();
+    });
+
+    res.status(200).json({ message: 'CSV created' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

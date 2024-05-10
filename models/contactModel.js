@@ -21,6 +21,9 @@ const contactSchema = mongoose.Schema(
     address: {
       type: String,
     },
+    avatar: {
+      type: String,
+    },
   },
   {
     timestamps: true,
